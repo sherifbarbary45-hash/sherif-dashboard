@@ -1,0 +1,1408 @@
+/* المتغيرات العامة والتصميم الأساسي */
+:root {
+  --primary: #10b981;
+  --primary-dark: #059669;
+  --primary-light: #d1fae5;
+  --sherif-color: #3b82f6;
+  --sherif-bg: #eff6ff;
+  --sherif-border: #93c5fd;
+  --abdullah-color: #8b5cf6;
+  --abdullah-bg: #f5f3ff;
+  --abdullah-border: #c4b5fd;
+  
+  --bg-main: #f8fafc;
+  --card-bg: #ffffff;
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+  --border-color: #e2e8f0;
+  --success: #16a34a;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-full: 9999px;
+  
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+  --shadow-md: 0 4px 14px rgba(0,0,0,0.07);
+  --shadow-lg: 0 10px 25px -5px rgba(0,0,0,0.1);
+  --shadow-glow: 0 0 20px rgba(16, 185, 129, 0.2);
+  
+  --font-heading: 'Cairo', system-ui, sans-serif;
+  --font-body: 'Tajawal', system-ui, sans-serif;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--bg-main);
+  color: var(--text-main);
+  line-height: 1.6;
+  direction: rtl;
+  min-height: 100vh;
+}
+
+/* الرأس والمقدمة */
+.app-header {
+  background: linear-gradient(135deg, #064e3b 0%, #065f46 50%, #0f766e 100%);
+  color: #ffffff;
+  padding: 1.25rem 1rem;
+  box-shadow: var(--shadow-md);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.header-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.logo-area {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.logo-icon {
+  width: 50px;
+  height: 50px;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  color: #6ee7b7;
+}
+
+.app-header h1 {
+  font-family: var(--font-heading);
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: -0.3px;
+  line-height: 1.2;
+}
+
+.subtitle {
+  font-size: 0.88rem;
+  color: #a7f3d0;
+  margin-top: 2px;
+}
+
+.subtitle .highlight {
+  font-weight: 700;
+  color: #ffffff;
+  text-decoration: underline;
+  text-decoration-color: #34d399;
+}
+
+/* محدد المستخدم النشط في الهيدر */
+.active-user-selector {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: rgba(0, 0, 0, 0.25);
+  padding: 0.35rem 0.6rem;
+  border-radius: var(--radius-full);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.user-selector-label {
+  font-size: 0.82rem;
+  color: #d1fae5;
+  font-weight: 600;
+}
+
+.user-toggle-group {
+  display: flex;
+  gap: 0.3rem;
+}
+
+.user-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid transparent;
+  color: #ffffff;
+  padding: 0.35rem 0.8rem;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  font-family: var(--font-heading);
+  font-size: 0.85rem;
+  font-weight: 700;
+  transition: all 0.2s ease;
+}
+
+.user-toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.user-toggle-btn.active[data-person="شريف"] {
+  background: #2563eb;
+  border-color: #93c5fd;
+  box-shadow: 0 0 12px rgba(37, 99, 235, 0.5);
+}
+
+.user-toggle-btn.active[data-person="عبدالله"] {
+  background: #7c3aed;
+  border-color: #c4b5fd;
+  box-shadow: 0 0 12px rgba(124, 58, 237, 0.5);
+}
+
+.avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.avatar-sherif {
+  background: #2563eb;
+}
+
+.avatar-abdullah {
+  background: #7c3aed;
+}
+
+/* شريط تنبيه الاتصال */
+.connection-banner {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fcd34d;
+  padding: 0.65rem 1rem;
+  border-radius: var(--radius-md);
+  margin-bottom: 1.25rem;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.connection-banner.online {
+  background: #d1fae5;
+  color: #065f46;
+  border-color: #6ee7b7;
+}
+
+/* الحاوية الرئيسية */
+.main-container {
+  max-width: 1200px;
+  margin: 1.5rem auto;
+  padding: 0 1rem;
+}
+
+/* بطاقات الإحصائيات (Stats Cards) */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 1.75rem;
+}
+
+.stat-card {
+  background: var(--card-bg);
+  border-radius: var(--radius-lg);
+  padding: 1.35rem;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.stat-icon-wrapper {
+  width: 58px;
+  height: 58px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.stat-total .stat-icon-wrapper {
+  background: #ecfdf5;
+  color: #059669;
+}
+.stat-total {
+  border-top: 4px solid #10b981;
+}
+
+.stat-sherif .stat-icon-wrapper {
+  background: var(--sherif-bg);
+  color: var(--sherif-color);
+}
+.stat-sherif {
+  border-top: 4px solid var(--sherif-color);
+}
+
+.stat-abdullah .stat-icon-wrapper {
+  background: var(--abdullah-bg);
+  color: var(--abdullah-color);
+}
+.stat-abdullah {
+  border-top: 4px solid var(--abdullah-color);
+}
+
+.stat-balance .stat-icon-wrapper {
+  background: #fffbeb;
+  color: #d97706;
+}
+.stat-balance {
+  border-top: 4px solid #f59e0b;
+}
+
+.stat-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-label {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.stat-value {
+  font-family: var(--font-heading);
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--text-main);
+  margin: 0.15rem 0;
+}
+
+.stat-value small {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.stat-subtext {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.balance-value {
+  font-size: 1.15rem;
+}
+
+/* الشبكة الداخلية */
+.content-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+@media (max-width: 900px) {
+  .content-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* تصميم البطاقات العامة */
+.card {
+  background: var(--card-bg);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
+  padding: 1.5rem;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.85rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.card-title {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: var(--text-main);
+}
+
+.card-title i {
+  color: var(--primary);
+  font-size: 1.2rem;
+}
+
+.card-title h3 {
+  font-family: var(--font-heading);
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.badge-amount {
+  background: #ecfdf5;
+  color: #047857;
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--radius-full);
+  border: 1px solid #a7f3d0;
+}
+
+/* نموذج تسجيل التحويل */
+.payment-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.form-label {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #334155;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.form-label i {
+  color: #64748b;
+  font-size: 0.95rem;
+}
+
+.form-row {
+  display: flex;
+  gap: 1rem;
+}
+
+.col-half {
+  flex: 1;
+}
+
+@media (max-width: 600px) {
+  .form-row {
+    flex-direction: column;
+    gap: 1rem;
+  }
+}
+
+.form-input {
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  padding: 0.65rem 0.9rem;
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: #fdfdfd;
+  color: var(--text-main);
+  transition: border-color 0.2s, box-shadow 0.2s;
+  outline: none;
+  width: 100%;
+}
+
+.form-input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
+  background: #ffffff;
+}
+
+.input-with-addon {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-with-addon .form-input {
+  padding-left: 3rem;
+}
+
+.input-addon {
+  position: absolute;
+  left: 0.85rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+/* اختيار الشخص في الراديو */
+.radio-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.85rem;
+}
+
+.radio-card {
+  position: relative;
+  cursor: pointer;
+}
+
+.radio-card input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.radio-card-content {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: #ffffff;
+  transition: all 0.2s ease;
+}
+
+.radio-card-content .person-name {
+  font-family: var(--font-heading);
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.radio-card input:checked + .radio-card-content {
+  border-color: var(--primary);
+  background: #f0fdf4;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.15);
+}
+
+.radio-card #radioSherif:checked + .radio-card-content {
+  border-color: var(--sherif-color);
+  background: var(--sherif-bg);
+}
+
+.radio-card #radioAbdullah:checked + .radio-card-content {
+  border-color: var(--abdullah-color);
+  background: var(--abdullah-bg);
+}
+
+/* منطقة سحب وإفلات صورة الإيصال */
+.drop-zone {
+  border: 2px dashed #94a3b8;
+  border-radius: var(--radius-md);
+  padding: 1.5rem 1rem;
+  text-align: center;
+  background: #f8fafc;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.drop-zone:hover, .drop-zone.dragover {
+  border-color: var(--primary);
+  background: #f0fdf4;
+}
+
+.file-input-hidden {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+}
+
+.drop-icon {
+  font-size: 2.2rem;
+  color: var(--primary);
+  margin-bottom: 0.5rem;
+}
+
+.drop-text {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+.drop-text span {
+  color: var(--primary);
+  text-decoration: underline;
+}
+
+.drop-hint {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  display: block;
+  margin-top: 0.3rem;
+}
+
+.image-preview-container {
+  position: relative;
+  display: inline-block;
+  max-width: 100%;
+}
+
+.image-preview-container img {
+  max-height: 180px;
+  max-width: 100%;
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+  object-fit: cover;
+}
+
+.btn-remove-preview {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: var(--danger);
+  color: #ffffff;
+  border: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-md);
+  font-size: 0.85rem;
+  transition: transform 0.2s ease;
+  z-index: 10;
+}
+
+.btn-remove-preview:hover {
+  transform: scale(1.15);
+}
+
+/* الأزرار */
+.btn {
+  font-family: var(--font-heading);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.4rem;
+  border-radius: var(--radius-md);
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
+}
+
+.btn-submit {
+  width: 100%;
+  padding: 0.85rem;
+  margin-top: 0.5rem;
+}
+
+.btn-outline-sm {
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.btn-outline-sm:hover {
+  background: #f1f5f9;
+  color: var(--text-main);
+}
+
+/* جدول الشهور */
+.matrix-table-wrapper {
+  overflow-x: auto;
+}
+
+.matrix-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: right;
+  font-size: 0.92rem;
+}
+
+.matrix-table th {
+  background: #f8fafc;
+  padding: 0.75rem 0.85rem;
+  font-family: var(--font-heading);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #475569;
+  border-bottom: 2px solid var(--border-color);
+}
+
+.matrix-table td {
+  padding: 0.85rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: var(--radius-full);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.status-badge.paid {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.status-badge.unpaid {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+/* سجل التحويلات والإيصالات المرفوعة */
+.transactions-section {
+  margin-bottom: 3rem;
+}
+
+.transactions-header {
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.count-badge {
+  background: #e2e8f0;
+  color: #334155;
+  font-size: 0.8rem;
+  font-weight: 800;
+  padding: 0.2rem 0.55rem;
+  border-radius: var(--radius-full);
+}
+
+.filter-buttons {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.filter-btn {
+  background: #f1f5f9;
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  padding: 0.35rem 0.85rem;
+  border-radius: var(--radius-full);
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: var(--font-heading);
+}
+
+.filter-btn.active {
+  background: var(--text-main);
+  color: #ffffff;
+  border-color: var(--text-main);
+}
+
+/* بطاقات التحويلات الفردية */
+.transactions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+  gap: 1.25rem;
+}
+
+.tx-card {
+  background: #ffffff;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.tx-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+}
+
+.tx-card.tx-sherif {
+  border-right: 4px solid var(--sherif-color);
+}
+
+.tx-card.tx-abdullah {
+  border-right: 4px solid var(--abdullah-color);
+}
+
+.tx-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.85rem 1rem;
+  background: #fcfcfd;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.tx-person-info {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.tx-person-name {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 0.95rem;
+}
+
+.tx-amount {
+  font-family: var(--font-heading);
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #047857;
+}
+
+/* معاينة الصورة في البطاقة */
+.tx-image-wrapper {
+  position: relative;
+  width: 100%;
+  height: 180px;
+  background: #f1f5f9;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.tx-receipt-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.tx-image-wrapper:hover .tx-receipt-img {
+  transform: scale(1.05);
+}
+
+.tx-overlay-btn {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  color: #ffffff;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.tx-image-wrapper:hover .tx-overlay-btn {
+  opacity: 1;
+}
+
+.tx-card-body {
+  padding: 0.9rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  color: #475569;
+  flex-grow: 1;
+}
+
+.tx-detail-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.tx-detail-row i {
+  color: #94a3b8;
+  margin-left: 0.35rem;
+}
+
+.tx-note-box {
+  background: #f8fafc;
+  padding: 0.45rem 0.65rem;
+  border-radius: var(--radius-sm);
+  border-right: 2px solid var(--border-color);
+  font-size: 0.8rem;
+  color: #334155;
+  margin-top: 0.25rem;
+}
+
+.tx-card-footer {
+  padding: 0.6rem 1rem;
+  background: #fafafa;
+  border-top: 1px solid #f1f5f9;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.tx-time {
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+.btn-delete-tx {
+  background: transparent;
+  border: none;
+  color: #cbd5e1;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-sm);
+  transition: color 0.2s;
+  font-size: 0.85rem;
+}
+
+.btn-delete-tx:hover {
+  color: var(--danger);
+  background: #fef2f2;
+}
+
+/* الحالة الفارغة */
+.empty-state-card {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 3rem 1.5rem;
+  background: #ffffff;
+  border-radius: var(--radius-lg);
+  border: 1px dashed var(--border-color);
+}
+
+.empty-state-card i {
+  font-size: 3rem;
+  color: #cbd5e1;
+  margin-bottom: 0.75rem;
+}
+
+.empty-state-card h4 {
+  font-family: var(--font-heading);
+  font-size: 1.1rem;
+  color: #334155;
+  margin-bottom: 0.35rem;
+}
+
+.empty-state-card p {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+}
+
+/* نافذة المعاينة المنبثقة (Lightbox Modal) */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(6px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  opacity: 1;
+  transition: opacity 0.2s ease;
+}
+
+.modal-content {
+  background: #ffffff;
+  border-radius: var(--radius-lg);
+  max-width: 750px;
+  width: 100%;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+  animation: modalPop 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modalPop {
+  0% { transform: scale(0.92); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border-color);
+  background: #f8fafc;
+}
+
+.modal-title-info h4 {
+  font-family: var(--font-heading);
+  font-size: 1.1rem;
+  font-weight: 800;
+}
+
+.modal-title-info span {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+.modal-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.modal-icon-btn {
+  background: #ffffff;
+  border: 1px solid var(--border-color);
+  color: #475569;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.2s;
+  font-size: 1rem;
+}
+
+.modal-icon-btn:hover {
+  background: #f1f5f9;
+  color: var(--text-main);
+}
+
+.close-modal-btn:hover {
+  background: #fee2e2;
+  color: var(--danger);
+  border-color: #fca5a5;
+}
+
+.modal-body {
+  padding: 1rem;
+  overflow-y: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #0f172a;
+}
+
+.image-wrapper {
+  max-width: 100%;
+  max-height: 70vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.image-wrapper img {
+  max-width: 100%;
+  max-height: 70vh;
+  object-fit: contain;
+  border-radius: var(--radius-sm);
+  transition: transform 0.2s ease;
+}
+
+/* الإشعارات العائمة (Toasts) */
+.toast-container {
+  position: fixed;
+  bottom: 1.5rem;
+  left: 1.5rem;
+  z-index: 1100;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.toast {
+  background: #1e293b;
+  color: #ffffff;
+  padding: 0.75rem 1.25rem;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  animation: toastIn 0.3s ease;
+}
+
+.toast.success {
+  border-right: 4px solid var(--success);
+}
+
+.toast.error {
+  border-right: 4px solid var(--danger);
+}
+
+@keyframes toastIn {
+  0% { transform: translateY(20px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+/* التذييل */
+.app-footer {
+  text-align: center;
+  padding: 2rem 1rem;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  border-top: 1px solid var(--border-color);
+  margin-top: 2rem;
+  background: #ffffff;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* تصميم كارت الدفع الفوري لانستاباي */
+.instapay-banner {
+  background: linear-gradient(135deg, #fdf4ff 0%, #fae8ff 50%, #f0fdf4 100%);
+  border: 2px solid #d8b4fe;
+  border-radius: var(--radius-md);
+  padding: 1.15rem;
+  margin: 0.5rem 0 1rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  box-shadow: 0 4px 14px rgba(168, 85, 247, 0.08);
+  position: relative;
+  overflow: hidden;
+}
+
+.instapay-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: #7e22ce;
+  color: #ffffff;
+  font-family: var(--font-heading);
+  font-size: 0.78rem;
+  font-weight: 800;
+  padding: 0.25rem 0.65rem;
+  border-radius: var(--radius-full);
+  width: fit-content;
+}
+
+.instapay-info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.65rem;
+}
+
+.instapay-info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.instapay-info-item .label {
+  font-size: 0.78rem;
+  color: #6b21a8;
+  font-weight: 700;
+}
+
+.instapay-info-item .value {
+  font-family: var(--font-heading);
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #1e1b4b;
+}
+
+.instapay-info-item .amount-highlight {
+  color: #059669;
+  font-size: 1.25rem;
+}
+
+.card-full-width {
+  grid-column: 1 / -1;
+}
+
+.card-display-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #ffffff;
+  border: 1.5px dashed #a855f7;
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 0.85rem;
+  margin-top: 0.25rem;
+}
+
+.card-number {
+  font-family: 'Courier New', monospace;
+  font-size: 1.15rem;
+  font-weight: 900;
+  color: #1e1b4b;
+  letter-spacing: 1.5px;
+  direction: ltr;
+}
+
+.btn-copy-chip {
+  background: #f3e8ff;
+  border: 1px solid #c084fc;
+  color: #7e22ce;
+  border-radius: var(--radius-sm);
+  padding: 0.35rem 0.75rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  transition: all 0.2s;
+  font-family: var(--font-heading);
+}
+
+.btn-copy-chip:hover {
+  background: #7e22ce;
+  color: #ffffff;
+}
+
+.btn-instapay-direct {
+  background: linear-gradient(135deg, #7e22ce 0%, #6b21a8 50%, #059669 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 0.85rem 1rem;
+  font-family: var(--font-heading);
+  font-size: 0.98rem;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  box-shadow: 0 4px 15px rgba(126, 34, 206, 0.35);
+  transition: all 0.25s ease;
+  width: 100%;
+}
+
+.btn-instapay-direct:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(126, 34, 206, 0.45);
+}
+
+/* نافذة انستاباي المنبثقة */
+.instapay-modal-content {
+  max-width: 520px;
+}
+
+.instapay-modal-body {
+  background: #ffffff;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.credit-card-preview {
+  background: linear-gradient(135deg, #1e1b4b 0%, #312e81 40%, #047857 100%);
+  border-radius: 16px;
+  padding: 1.35rem;
+  color: #ffffff;
+  box-shadow: 0 10px 25px rgba(30, 27, 75, 0.35);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.credit-card-preview::before {
+  content: "";
+  position: absolute;
+  top: -30%;
+  left: -20%;
+  width: 200px;
+  height: 200px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 50%;
+}
+
+.card-visual-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.card-chip {
+  color: #fbbf24;
+  font-size: 1.8rem;
+}
+
+.card-brand-badge {
+  background: rgba(255, 255, 255, 0.15);
+  padding: 0.2rem 0.6rem;
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: 700;
+  backdrop-filter: blur(4px);
+}
+
+.card-visual-num {
+  font-family: 'Courier New', monospace;
+  font-size: 1.45rem;
+  font-weight: 900;
+  letter-spacing: 2px;
+  direction: ltr;
+  text-align: center;
+  color: #f8fafc;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+.card-visual-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  padding-top: 0.65rem;
+}
+
+.card-visual-meta .meta-label {
+  display: block;
+  font-size: 0.72rem;
+  color: #cbd5e1;
+}
+
+.card-visual-meta .meta-val {
+  font-family: var(--font-heading);
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.card-visual-meta .highlight-val {
+  color: #34d399;
+  font-size: 1.2rem;
+}
+
+.instapay-steps-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.step-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  background: #f8fafc;
+  padding: 0.65rem 0.85rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+  font-size: 0.88rem;
+  color: #334155;
+}
+
+.step-badge {
+  width: 24px;
+  height: 24px;
+  background: #10b981;
+  color: #ffffff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+.step-card code {
+  background: #e2e8f0;
+  color: #0f172a;
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  font-family: monospace;
+  font-weight: 700;
+}
+
+.modal-actions-container {
+  display: flex;
+  gap: 0.75rem;
+  flex-direction: column;
+}
+
+.btn-launch-instapay {
+  background: linear-gradient(135deg, #7e22ce 0%, #10b981 100%);
+  color: #ffffff;
+  font-size: 1.05rem;
+  padding: 0.95rem;
+  width: 100%;
+}
+
+.btn-launch-instapay:hover {
+  background: linear-gradient(135deg, #6b21a8 0%, #059669 100%);
+}
+
+.btn-outline {
+  background: #ffffff;
+  border: 1.5px solid var(--border-color);
+  color: #475569;
+  padding: 0.65rem;
+  border-radius: var(--radius-md);
+  font-family: var(--font-heading);
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  transition: all 0.2s;
+}
+
+.btn-outline:hover {
+  background: #f8fafc;
+  border-color: #94a3b8;
+}
+
+.instapay-hint-text {
+  font-size: 0.82rem;
+  color: #6b21a8;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-top: 0.2rem;
+}
+
+.instapay-hint-text i {
+  color: #10b981;
+}
