@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>لوحة متابعة التحويلات المالية | شريف & عبدالله</title>
+  
+  <!-- خطوط عربية حديثة -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+  
+  <!-- أيقونات FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <!-- ملف التنسيقات -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- رأس الصفحة -->
+  <header class="app-header">
+    <div class="header-container">
+      <div class="logo-area">
+        <div class="logo-icon">
+          <i class="fa-solid fa-hand-holding-dollar"></i>
+        </div>
+        <div>
+          <h1>متابعة صندوق التحويلات</h1>
+          <p class="subtitle">لوحة المتابعة المشتركة بين <span class="highlight">شريف</span> و <span class="highlight">عبدالله</span></p>
+        </div>
+      </div>
+
+      <!-- محدد المستخدم النشط -->
+      <div class="active-user-selector">
+        <span class="user-selector-label"><i class="fa-solid fa-user-check"></i> أنت الآن:</span>
+        <div class="user-toggle-group">
+          <button type="button" class="user-toggle-btn active" data-person="شريف" id="btnUserSherif">
+            <span class="avatar avatar-sherif">ش</span>
+            <span class="name">شريف</span>
+          </button>
+          <button type="button" class="user-toggle-btn" data-person="عبدالله" id="btnUserAbdullah">
+            <span class="avatar avatar-abdullah">ع</span>
+            <span class="name">عبدالله</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="main-container">
+
+    <!-- شريط تنبيه حالة الاتصال بالسيرفر -->
+    <div id="connectionStatus" class="connection-banner hidden">
+      <i class="fa-solid fa-circle-info"></i>
+      <span id="connectionText">يتم فحص الاتصال بالخادم...</span>
+    </div>
+
+    <!-- بطاقات الإحصائيات الرئيسية -->
+    <section class="stats-grid">
+      <!-- إجمالي المبلغ المدفوع -->
+      <div class="stat-card stat-total">
+        <div class="stat-icon-wrapper">
+          <i class="fa-solid fa-vault"></i>
+        </div>
+        <div class="stat-info">
+          <span class="stat-label">إجمالي المبلغ المحصّل</span>
+          <h2 class="stat-value" id="statTotalPaid">0 <small>ج.م</small></h2>
+          <span class="stat-subtext" id="statTotalCount">0 عملية تحويل مسجلة</span>
+        </div>
+      </div>
+
+      <!-- مدفوعات شريف -->
+      <div class="stat-card stat-sherif">
+        <div class="stat-icon-wrapper">
+          <i class="fa-solid fa-user-tie"></i>
+        </div>
+        <div class="stat-info">
+          <span class="stat-label">مدفوعات شريف</span>
+          <h2 class="stat-value" id="statSherifTotal">0 <small>ج.م</small></h2>
+          <span class="stat-subtext" id="statSherifCount">0 شهور مدفوعة</span>
+        </div>
+      </div>
+
+      <!-- مدفوعات عبدالله -->
+      <div class="stat-card stat-abdullah">
+        <div class="stat-icon-wrapper">
+          <i class="fa-solid fa-user-gear"></i>
+        </div>
+        <div class="stat-info">
+          <span class="stat-label">مدفوعات عبدالله</span>
+          <h2 class="stat-value" id="statAbdullahTotal">0 <small>ج.م</small></h2>
+          <span class="stat-subtext" id="statAbdullahCount">0 شهور مدفوعة</span>
+        </div>
+      </div>
+
+      <!-- توازن الحسابات -->
+      <div class="stat-card stat-balance">
+        <div class="stat-icon-wrapper">
+          <i class="fa-solid fa-scale-balanced"></i>
+        </div>
+        <div class="stat-info">
+          <span class="stat-label">حالة التوازن</span>
+          <h3 class="stat-value balance-value" id="statBalanceStatus">متساويان تماماً</h3>
+          <span class="stat-subtext" id="statBalanceDiff">كل طرف دفع نفس المبلغ</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- الشبكة الرئيسية: نموذج الرفع + جدول متابعة الشهور -->
+    <div class="content-grid">
+      
+      <!-- قسم تسجيل تحويل جديد ورفع الإيصال -->
+      <section class="card form-card">
+        <div class="card-header">
+          <div class="card-title">
+            <i class="fa-solid fa-circle-plus"></i>
+            <h3>تسجيل تحويل جديد</h3>
+          </div>
+          <span class="badge-amount">المبلغ الشهري: 500 ج.م</span>
+        </div>
+
+        <form id="paymentForm" class="payment-form" novalidate>
+          
+          <!-- اختيار الشخص -->
+          <div class="form-group">
+            <label class="form-label"><i class="fa-solid fa-user"></i> المحوِّل (صاحب الدفعة):</label>
+            <div class="radio-cards">
+              <label class="radio-card">
+                <input type="radio" name="person" value="شريف" id="radioSherif" checked>
+                <div class="radio-card-content">
+                  <span class="avatar avatar-sherif">ش</span>
+                  <div class="person-name">شريف</div>
+                </div>
+              </label>
+
+              <label class="radio-card">
+                <input type="radio" name="person" value="عبدالله" id="radioAbdullah">
+                <div class="radio-card-content">
+                  <span class="avatar avatar-abdullah">ع</span>
+                  <div class="person-name">عبدالله</div>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <!-- اختيار الشهر -->
+            <div class="form-group col-half">
+              <label for="monthInput" class="form-label"><i class="fa-regular fa-calendar-days"></i> شهر الاستحقاق:</label>
+              <input type="month" id="monthInput" name="month" class="form-input" required>
+            </div>
+
+            <!-- المبلغ -->
+            <div class="form-group col-half">
+              <label for="amountInput" class="form-label"><i class="fa-solid fa-coins"></i> المبلغ (جنيه مصري):</label>
+              <div class="input-with-addon">
+                <input type="number" id="amountInput" name="amount" class="form-input" value="500" min="1" step="50" required>
+                <span class="input-addon">ج.م</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <!-- طريقة التحويل -->
+            <div class="form-group col-half">
+              <label for="methodSelect" class="form-label"><i class="fa-solid fa-wallet"></i> وسيلة التحويل:</label>
+              <select id="methodSelect" name="method" class="form-input">
+                <option value="انستاباي (InstaPay)">انستاباي (InstaPay)</option>
+                <option value="فودافون كاش (Vodafone Cash)">فودافون كاش (Vodafone Cash)</option>
+                <option value="محفظة إلكترونية أخرى">محفظة إلكترونية أخرى</option>
+                <option value="تحويل بنكي مباشر">تحويل بنكي مباشر</option>
+                <option value="كاش / نقدي">كاش / نقدي</option>
+              </select>
+            </div>
+
+            <!-- بند الملاحظة تم تغييره إلى التحويل 500 جنيه -->
+            <div class="form-group col-half">
+              <label for="noteInput" class="form-label"><i class="fa-solid fa-file-invoice-dollar"></i> التحويل 500 جنيه:</label>
+              <input type="text" id="noteInput" name="note" class="form-input" value="التحويل 500 جنيه" placeholder="التحويل 500 جنيه">
+            </div>
+          </div>
+
+          <!-- كارت الدفع الفوري المباشر عبر انستاباي -->
+          <div class="instapay-banner">
+            <div class="instapay-badge"><i class="fa-solid fa-bolt"></i> تحويل مباشر &bull; انستاباي InstaPay</div>
+            <div class="instapay-info-grid">
+              <div class="instapay-info-item">
+                <span class="label">المستفيد:</span>
+                <span class="value">شريف ابراهيم</span>
+              </div>
+              <div class="instapay-info-item">
+                <span class="label">المبلغ المحدد:</span>
+                <span class="value amount-highlight">500 ج.م</span>
+              </div>
+              <div class="instapay-info-item card-full-width">
+                <span class="label">رقم البطاقة البنكية:</span>
+                <div class="card-display-box">
+                  <span class="card-number" id="cardFormatted">5078 0867 3552 0319</span>
+                  <button type="button" class="btn-copy-chip" id="btnCopyCard" title="نسخ رقم البطاقة">
+                    <i class="fa-regular fa-copy"></i> نسخ الرقم
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- الرابط المباشر: ينسخ الكارت ويسجل الـ 500 جنيه في الداشبورد ويفتح انستاباي فوراً بدون تفاصيل -->
+            <a href="instapay://" class="btn-instapay-direct" id="btnPayInstapay">
+              <i class="fa-solid fa-bolt-lightning fa-lg"></i>
+              <span>🚀 اضغط هنا: فتح انستاباي فوراً وتسجيل التحويل (500 ج.م) في الداشبورد</span>
+            </a>
+            <p class="instapay-hint-text">
+              <i class="fa-solid fa-circle-check"></i> بمجرد الضغط: يتم نسخ رقم الكارت تلقائياً، وتسجيل العملية في الداشبورد، وفتح تطبيق انستاباي مباشرة على هاتفك!
+            </p>
+          </div>
+
+          <!-- رفع صورة التحويل (اختياري - لم يعد مطلوباً إجبارياً) -->
+          <div class="form-group optional-upload-box">
+            <label class="form-label">
+              <i class="fa-solid fa-image"></i> إرفاق صورة إيصال التحويل <small style="color: #64748b; font-weight: normal;">(اختياري - يمكنك التخطي والضغط على تسجيل)</small>:
+            </label>
+            <div class="drop-zone" id="dropZone">
+              <input type="file" id="receiptFileInput" name="receipt" accept="image/*" class="file-input-hidden">
+              <div class="drop-zone-prompt" id="dropPrompt">
+                <i class="fa-solid fa-cloud-arrow-up drop-icon"></i>
+                <p class="drop-text">إذا أردت حفظ صورة الإيصال اسحبها هنا أو <span>اضغط للاختيار</span></p>
+                <span class="drop-hint">(اختياري - التحويل يُحفظ حتى لو لم ترفع صورة)</span>
+              </div>
+              <div class="image-preview-container hidden" id="previewContainer">
+                <img id="imagePreview" src="" alt="معاينة إيصال التحويل">
+                <button type="button" class="btn-remove-preview" id="btnRemoveImage" title="حذف الصورة">
+                  <i class="fa-solid fa-trash-can"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- زر التسجيل اليدوي للتحويل بدون أو مع صورة -->
+          <button type="submit" class="btn btn-primary btn-submit" id="submitBtn">
+            <i class="fa-solid fa-paper-plane"></i>
+            <span>تأكيد وتسجيل التحويل في اللوحة</span>
+          </button>
+        </form>
+      </section>
+
+      <!-- قسم متابعة التزام الشهور -->
+      <section class="card monthly-matrix-card">
+        <div class="card-header">
+          <div class="card-title">
+            <i class="fa-solid fa-calendar-check"></i>
+            <h3>جدول التزام الشهور</h3>
+          </div>
+          <button class="btn btn-outline-sm" id="btnRefreshMatrix" title="تحديث البيانات">
+            <i class="fa-solid fa-rotate"></i>
+          </button>
+        </div>
+
+        <div class="matrix-table-wrapper">
+          <table class="matrix-table">
+            <thead>
+              <tr>
+                <th>الشهر</th>
+                <th>شريف</th>
+                <th>عبدالله</th>
+                <th>الإجمالي</th>
+              </tr>
+            </thead>
+            <tbody id="matrixTableBody">
+              <tr>
+                <td colspan="4" class="text-center empty-state">جاري تحميل سجل الشهور...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- سجل وتاريخ التحويلات مع صور الإيصالات -->
+    <section class="card transactions-section">
+      <div class="card-header transactions-header">
+        <div class="card-title">
+          <i class="fa-solid fa-receipt"></i>
+          <h3>سجل التحويلات والإيصالات المرفوعة</h3>
+          <span class="count-badge" id="transactionsCountBadge">0</span>
+        </div>
+
+        <!-- فلاتر العرض -->
+        <div class="filter-buttons">
+          <button type="button" class="filter-btn active" data-filter="all">الكل</button>
+          <button type="button" class="filter-btn" data-filter="شريف">تحويلات شريف</button>
+          <button type="button" class="filter-btn" data-filter="عبدالله">تحويلات عبدالله</button>
+        </div>
+      </div>
+
+      <!-- شبكة بطاقات التحويلات -->
+      <div class="transactions-grid" id="transactionsGrid">
+        <div class="empty-state-card">
+          <i class="fa-solid fa-inbox"></i>
+          <h4>لا توجد تحويلات مسجلة حتى الآن</h4>
+          <p>قم بتسجيل أول تحويل من النموذج بالأعلى ورفع صورة الإيصال</p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- نافذة تكبير وفحص صورة الإيصال (Lightbox Modal) -->
+  <div class="modal-overlay hidden" id="imageModal" tabindex="-1">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-title-info">
+          <h4 id="modalPersonName">إيصال تحويل</h4>
+          <span id="modalPaymentDetails">تفاصيل التحويل</span>
+        </div>
+        <div class="modal-actions">
+          <a id="modalDownloadBtn" href="#" download="receipt.jpg" class="modal-icon-btn" title="تحميل الصورة">
+            <i class="fa-solid fa-download"></i>
+          </a>
+          <button type="button" class="modal-icon-btn" id="modalRotateBtn" title="تدوير الصورة">
+            <i class="fa-solid fa-rotate-right"></i>
+          </button>
+          <button type="button" class="modal-icon-btn close-modal-btn" id="closeModalBtn" title="إغلاق">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+      </div>
+      <div class="modal-body">
+        <div class="image-wrapper">
+          <img id="modalFullImage" src="" alt="صورة إيصال التحويل كاملة">
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- حاوية إشعارات التنبيه (Toast Notifications) -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <footer class="app-footer">
+    <p>لوحة التحكم المشتركة &bull; تم التطوير لحفظ وتوثيق التحويلات المالية بين <strong>شريف</strong> و <strong>عبدالله</strong></p>
+  </footer>
+
+  <!-- السكربت الرئيسي -->
+  <script src="app.js"></script>
+</body>
+</html>
