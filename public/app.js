@@ -279,54 +279,25 @@ function fallbackCopy(text) {
   showToast('📋 تم نسخ رقم بطاقة شريف ابراهيم: 5078086735520319', 'success');
 }
 
-// ضغطة زر واحدة: تسجيل 500 جنيه في الداشبورد + نسخ الكارت + فتح انستاباي فوراً
+// عند الضغط على زر انستاباي: نسخ رقم البطاقة + فتح تطبيق انستاباي + توجيه لرفع الإيصال
 async function quickPayAndRecord() {
   // 1. نسخ رقم البطاقة فوراً
   copyCardNumber();
 
-  // 2. توجيه الموبايل لفتح تطبيق انستاباي مباشرة وبدون أي نوافذ
+  // 2. توجيه الموبايل لفتح تطبيق انستاباي مباشرة
   launchInstapayDirectly();
 
-  // 3. تسجيل التحويل تلقائياً في الداشبورد
-  const person = state.currentUser;
-  const month = elements.monthInput.value || new Date().toISOString().slice(0, 7);
-  const amount = 500;
-  const method = 'انستاباي (InstaPay)';
-  const note = 'التحويل 500 جنيه';
+  // 3. تنبيه المستخدم بضرورة رفع صورة الإيصال لتأكيد التسجيل
+  showToast('📲 تم نسخ رقم البطاقة وتوجيهك لإنستاباي! بعد إتمام التحويل، يرجى رفع صورة الإيصال بالأسفل لتأكيد التسجيل.', 'success');
 
-  showToast(`⚡ جاري تأكيد تسجيل 500 ج.م باسم ${person}...`, 'success');
-
-  if (state.isServerOnline) {
-    try {
-      const formData = new FormData();
-      formData.append('person', person);
-      formData.append('month', month);
-      formData.append('amount', amount);
-      formData.append('method', method);
-      formData.append('note', note);
-      if (state.selectedFile) {
-        formData.append('receipt', state.selectedFile);
-      }
-
-      const res = await fetch('/api/payments', {
-        method: 'POST',
-        body: formData
-      });
-
-      const result = await res.json();
-      if (res.ok && result.success) {
-        showToast(`🎉 تم تسجيل الـ 500 ج.م باسم ${person} في الداشبورد بنجاح!`, 'success');
-        resetForm();
-        await loadDataFromServer(false);
-      }
-    } catch (err) {
-      console.error(err);
+  // 4. التمرير إلى مربع رفع الصورة ليكون جاهزاً
+  setTimeout(() => {
+    if (elements.dropZone) {
+      elements.dropZone.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      elements.dropZone.style.borderColor = '#10b981';
+      setTimeout(() => { elements.dropZone.style.borderColor = ''; }, 3000);
     }
-  } else {
-    saveLocally(person, month, amount, method, note, '/uploads/sample-receipt.svg');
-    showToast(`🎉 تم تسجيل الـ 500 ج.م باسم ${person} في الداشبورد بنجاح!`, 'success');
-    resetForm();
-  }
+  }, 1000);
 }
 
 function launchInstapayDirectly() {
@@ -401,6 +372,21 @@ async function handleFormSubmit(e) {
   const amount = parseFloat(elements.amountInput.value) || 500;
   const method = elements.methodSelect.value;
   const note = elements.noteInput.value;
+
+  // التحقق الإجباري الصارم من إرفاق صورة إيصال التحويل قبل التسجيل
+  if (!state.selectedFile) {
+    showToast('⚠️ لا يمكن تسجيل التحويل بدون رفع صورة إيصال التحويل أولاً! (مطلوبة إجبارياً)', 'error');
+    if (elements.dropZone) {
+      elements.dropZone.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      elements.dropZone.style.borderColor = '#e11d48';
+      elements.dropZone.style.boxShadow = '0 0 0 4px rgba(225, 29, 72, 0.25)';
+      setTimeout(() => {
+        elements.dropZone.style.borderColor = '';
+        elements.dropZone.style.boxShadow = '';
+      }, 3500);
+    }
+    return;
+  }
 
   // تعطيل الزر مؤقتاً
   elements.submitBtn.disabled = true;

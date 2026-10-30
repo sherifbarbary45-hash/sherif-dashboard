@@ -1,13 +1,1 @@
-[
-  {
-    "id": "pay_1793275129247",
-    "person": "شريف",
-    "month": "2026-10",
-    "amount": 500.0,
-    "method": "انستاباي (InstaPay)",
-    "note": "التحويل 500 جنيه",
-    "receiptUrl": "/uploads/sample-receipt.svg",
-    "receiptFilename": null,
-    "createdAt": "2026-10-29T11:58:49.247581Z"
-  }
-]
+[]

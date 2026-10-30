@@ -204,27 +204,27 @@
               </div>
             </div>
 
-            <!-- الرابط المباشر: ينسخ الكارت ويسجل الـ 500 جنيه في الداشبورد ويفتح انستاباي فوراً بدون تفاصيل -->
+            <!-- الرابط المباشر: ينسخ الكارت ويفتح انستاباي للدفع -->
             <a href="instapay://" class="btn-instapay-direct" id="btnPayInstapay">
               <i class="fa-solid fa-bolt-lightning fa-lg"></i>
-              <span>🚀 اضغط هنا: فتح انستاباي فوراً وتسجيل التحويل (500 ج.م) في الداشبورد</span>
+              <span>🚀 اضغط هنا: فتح تطبيق انستاباي والتحويل لشريف ابراهيم (500 ج.م)</span>
             </a>
             <p class="instapay-hint-text">
-              <i class="fa-solid fa-circle-check"></i> بمجرد الضغط: يتم نسخ رقم الكارت تلقائياً، وتسجيل العملية في الداشبورد، وفتح تطبيق انستاباي مباشرة على هاتفك!
+              <i class="fa-solid fa-circle-check"></i> عند الضغط: يُنسخ رقم الكارت تلقائياً ويفتح تطبيق انستاباي، بعد إتمام الدفع ارفع صورة الإيصال بالأسفل لإتمام التسجيل.
             </p>
           </div>
 
-          <!-- رفع صورة التحويل (اختياري - لم يعد مطلوباً إجبارياً) -->
-          <div class="form-group optional-upload-box">
-            <label class="form-label">
-              <i class="fa-solid fa-image"></i> إرفاق صورة إيصال التحويل <small style="color: #64748b; font-weight: normal;">(اختياري - يمكنك التخطي والضغط على تسجيل)</small>:
+          <!-- رفع صورة التحويل (إجباري لتأكيد العملية) -->
+          <div class="form-group">
+            <label class="form-label" style="color: #0f172a; font-weight: 800;">
+              <i class="fa-solid fa-image" style="color: #e11d48;"></i> صورة إيصال التحويل <span style="color: #e11d48;">(إجباري لتأكيد التسجيل)</span>:
             </label>
-            <div class="drop-zone" id="dropZone">
-              <input type="file" id="receiptFileInput" name="receipt" accept="image/*" class="file-input-hidden">
+            <div class="drop-zone" id="dropZone" style="border-color: #cbd5e1;">
+              <input type="file" id="receiptFileInput" name="receipt" accept="image/*" class="file-input-hidden" required>
               <div class="drop-zone-prompt" id="dropPrompt">
-                <i class="fa-solid fa-cloud-arrow-up drop-icon"></i>
-                <p class="drop-text">إذا أردت حفظ صورة الإيصال اسحبها هنا أو <span>اضغط للاختيار</span></p>
-                <span class="drop-hint">(اختياري - التحويل يُحفظ حتى لو لم ترفع صورة)</span>
+                <i class="fa-solid fa-cloud-arrow-up drop-icon" style="color: #059669;"></i>
+                <p class="drop-text">اسحب وأفلت صورة إيصال التحويل هنا أو <span>اضغط للاختيار</span></p>
+                <span class="drop-hint" style="color: #b91c1c; font-weight: bold;">⚠️ لا يمكن تسجيل التحويل بدون رفع صورة الإيصال</span>
               </div>
               <div class="image-preview-container hidden" id="previewContainer">
                 <img id="imagePreview" src="" alt="معاينة إيصال التحويل">
@@ -235,10 +235,10 @@
             </div>
           </div>
 
-          <!-- زر التسجيل اليدوي للتحويل بدون أو مع صورة -->
+          <!-- زر تأكيد وتسجيل التحويل بعد رفع الصورة -->
           <button type="submit" class="btn btn-primary btn-submit" id="submitBtn">
-            <i class="fa-solid fa-paper-plane"></i>
-            <span>تأكيد وتسجيل التحويل في اللوحة</span>
+            <i class="fa-solid fa-cloud-arrow-up"></i>
+            <span>تأكيد وتسجيل التحويل وحفظ الإيصال</span>
           </button>
         </form>
       </section>

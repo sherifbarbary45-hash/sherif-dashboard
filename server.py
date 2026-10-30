@@ -68,16 +68,16 @@ def add_payment():
         if person not in ['شريف', 'عبدالله']:
             return jsonify({'success': False, 'message': 'يجب اختيار شخص صحيح (شريف أو عبدالله)'}), 400
 
-        receipt_url = "/uploads/sample-receipt.svg"
-        unique_filename = None
+        # التحقق الإجباري من وجود صورة إيصال التحويل
+        if 'receipt' not in request.files or not request.files['receipt'].filename:
+            return jsonify({'success': False, 'message': '⚠️ صورة إيصال التحويل مطلوبة إجبارياً قبل تسجيل الدفعة'}), 400
 
-        if 'receipt' in request.files and request.files['receipt'].filename:
-            receipt_file = request.files['receipt']
-            original_ext = os.path.splitext(receipt_file.filename)[1].lower() or '.jpg'
-            unique_filename = f"receipt-{int(time.time() * 1000)}{original_ext}"
-            filepath = os.path.join(UPLOADS_DIR, unique_filename)
-            receipt_file.save(filepath)
-            receipt_url = f"/uploads/{unique_filename}"
+        receipt_file = request.files['receipt']
+        original_ext = os.path.splitext(receipt_file.filename)[1].lower() or '.jpg'
+        unique_filename = f"receipt-{int(time.time() * 1000)}{original_ext}"
+        filepath = os.path.join(UPLOADS_DIR, unique_filename)
+        receipt_file.save(filepath)
+        receipt_url = f"/uploads/{unique_filename}"
 
         try:
             amount = float(amount_raw)
