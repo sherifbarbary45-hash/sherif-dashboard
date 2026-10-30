@@ -100,17 +100,31 @@ function getApiPaymentsUrl() {
   return `https://api.github.com/repos/${CLOUD_CONFIG.owner}/${CLOUD_CONFIG.repo}/contents/${CLOUD_CONFIG.path}`;
 }
 
-// تشفير وفك تشفير النصوص العربية إلى Base64
+// تشفير وفك تشفير النصوص العربية والبيانات الكبيرة بدقة عالية عبر TextEncoder و TextDecoder
 function utf8ToBase64(str) {
-  return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, (match, p1) => {
-    return String.fromCharCode('0x' + p1);
-  }));
+  const bytes = new TextEncoder().encode(str);
+  let binary = '';
+  const chunkSize = 8192;
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    const chunk = bytes.subarray(i, i + chunkSize);
+    binary += String.fromCharCode.apply(null, chunk);
+  }
+  return btoa(binary);
 }
 
 function base64ToUtf8(b64) {
-  return decodeURIComponent(Array.prototype.map.call(atob(b64), (c) => {
-    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-  }).join(''));
+  try {
+    const cleanB64 = (b64 || '').replace(/\s+/g, '');
+    const binaryStr = atob(cleanB64);
+    const bytes = new Uint8Array(binaryStr.length);
+    for (let i = 0; i < binaryStr.length; i++) {
+      bytes[i] = binaryStr.charCodeAt(i);
+    }
+    return new TextDecoder('utf-8').decode(bytes);
+  } catch (e) {
+    console.error('base64ToUtf8 error:', e);
+    return '[]';
+  }
 }
 
 // ضغط صورة الإيصال لتحويلها إلى Base64 خفيف وسريع المزامنة
@@ -365,6 +379,17 @@ function launchInstapayDirectly() {
 
 // فحص الاتصال وتحميل البيانات الموحدة
 async function checkConnectionAndLoadData() {
+  // 1. عرض الكاش المحفوظ فوراً لمنع وميض أو تصفير الشاشة
+  const cached = localStorage.getItem('cached_cloud_payments');
+  if (cached) {
+    try {
+      const cachedList = JSON.parse(cached);
+      if (Array.isArray(cachedList) && cachedList.length > 0) {
+        applyPaymentsList(cachedList);
+      }
+    } catch (e) {}
+  }
+
   const isLocalHost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 
   if (!isLocalHost) {
@@ -403,12 +428,26 @@ function updateCloudBanner(online) {
   }
 }
 
-// جلب البيانات المشتركة من السحابة
+// جلب البيانات المشتركة من السحابة مباشرة بدون كاش CDN
 async function loadDataFromCloud(showNotification = false) {
   try {
-    const res = await fetch(getRawPaymentsUrl(), { cache: 'no-cache' });
-    if (res.ok) {
-      const list = await res.json();
+    const apiUrl = `${getApiPaymentsUrl()}?ref=main&t=${Date.now()}`;
+    const apiRes = await fetch(apiUrl, {
+      headers: {
+        'Authorization': `Bearer ${getCloudToken()}`,
+        'Accept': 'application/vnd.github.v3+json',
+        'Cache-Control': 'no-cache'
+      }
+    });
+
+    if (apiRes.ok) {
+      const fileInfo = await apiRes.json();
+      const contentStr = base64ToUtf8(fileInfo.content);
+      const list = JSON.parse(contentStr || '[]');
+
+      // حفظ في الكاش المحلي لضمان دوام الظهور عند التحديث
+      localStorage.setItem('cached_cloud_payments', JSON.stringify(list));
+
       applyPaymentsList(list);
       updateCloudBanner(true);
       if (showNotification) {
@@ -417,25 +456,22 @@ async function loadDataFromCloud(showNotification = false) {
       return;
     }
   } catch (err) {
-    console.warn('Raw fetch failed, trying API fallback...', err);
+    console.warn('Direct GitHub API fetch failed, trying raw fallback...', err);
   }
 
+  // محاولة ثانوية عبر رابط raw في حال حدوث أي طارئ
   try {
-    const apiRes = await fetch(getApiPaymentsUrl(), {
-      headers: {
-        'Authorization': `Bearer ${getCloudToken()}`,
-        'Accept': 'application/vnd.github.v3+json'
+    const res = await fetch(getRawPaymentsUrl(), { cache: 'no-cache' });
+    if (res.ok) {
+      const list = await res.json();
+      if (Array.isArray(list) && list.length > 0) {
+        localStorage.setItem('cached_cloud_payments', JSON.stringify(list));
+        applyPaymentsList(list);
+        updateCloudBanner(true);
       }
-    });
-    if (apiRes.ok) {
-      const fileInfo = await apiRes.json();
-      const contentStr = base64ToUtf8(fileInfo.content);
-      const list = JSON.parse(contentStr || '[]');
-      applyPaymentsList(list);
-      updateCloudBanner(true);
     }
   } catch (e2) {
-    console.error('API load error:', e2);
+    console.error('Raw fallback error:', e2);
   }
 }
 
@@ -642,7 +678,8 @@ async function handleFormSubmit(e) {
         throw new Error(errData.message || 'فشل حفظ التحويل في السحابة');
       }
 
-      // تحديث العرض مباشرة
+      // حفظ في الكاش المحلي وتحديث العرض مباشرة لمنع أي تصفير أو وميض
+      localStorage.setItem('cached_cloud_payments', JSON.stringify(currentList));
       applyPaymentsList(currentList);
       showToast('🎉 تم تسجيل التحويل بنجاح في السحابة المشتركة! سيظهر الآن على هاتف الطرف الآخر فوراً.', 'success');
       resetForm();
@@ -880,6 +917,7 @@ window.deleteTransaction = async function(id) {
       });
 
       if (putRes.ok) {
+        localStorage.setItem('cached_cloud_payments', JSON.stringify(currentList));
         applyPaymentsList(currentList);
         showToast('تم حذف التحويل من السحابة بنجاح', 'success');
       } else {
