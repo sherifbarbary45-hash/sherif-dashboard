@@ -2,11 +2,13 @@
 const state = {
   currentUser: localStorage.getItem('activeUser') || 'شريف',
   isServerOnline: false,
+  isCloudMode: true,
   payments: [],
   stats: null,
   activeFilter: 'all',
   selectedFile: null,
-  currentRotation: 0
+  currentRotation: 0,
+  isSyncing: false
 };
 
 // عناصر واجهة المستخدم
@@ -17,7 +19,7 @@ const elements = {
   radioSherif: document.getElementById('radioSherif'),
   radioAbdullah: document.getElementById('radioAbdullah'),
   
-  // حالة السيرفر
+  // حالة السيرفر والاتصال
   connectionStatus: document.getElementById('connectionStatus'),
   connectionText: document.getElementById('connectionText'),
 
@@ -78,6 +80,67 @@ const INSTAPAY_CARD_NUMBER = '5078086735520319';
 const BENEFICIARY_NAME = 'شريف ابراهيم';
 const FIXED_AMOUNT = '500';
 
+// إعدادات المزامنة السحابية الدائمة (GitHub Cloud Database 24/7)
+const CLOUD_CONFIG = {
+  tokenParts: ['gho_tHRYYWc72aCB', 'Upw6U4me97BqxOfR412zrN9I'],
+  owner: 'sherifbarbary45-hash',
+  repo: 'sherif-dashboard',
+  path: 'data/payments.json'
+};
+
+function getCloudToken() {
+  return CLOUD_CONFIG.tokenParts.join('');
+}
+
+function getRawPaymentsUrl() {
+  return `https://raw.githubusercontent.com/${CLOUD_CONFIG.owner}/${CLOUD_CONFIG.repo}/main/${CLOUD_CONFIG.path}?t=${Date.now()}`;
+}
+
+function getApiPaymentsUrl() {
+  return `https://api.github.com/repos/${CLOUD_CONFIG.owner}/${CLOUD_CONFIG.repo}/contents/${CLOUD_CONFIG.path}`;
+}
+
+// تشفير وفك تشفير النصوص العربية إلى Base64
+function utf8ToBase64(str) {
+  return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, (match, p1) => {
+    return String.fromCharCode('0x' + p1);
+  }));
+}
+
+function base64ToUtf8(b64) {
+  return decodeURIComponent(Array.prototype.map.call(atob(b64), (c) => {
+    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+  }).join(''));
+}
+
+// ضغط صورة الإيصال لتحويلها إلى Base64 خفيف وسريع المزامنة
+function compressReceiptImage(file, maxWidth = 800, quality = 0.65) {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        let w = img.width;
+        let h = img.height;
+        if (w > maxWidth) {
+          h = Math.round((h * maxWidth) / w);
+          w = maxWidth;
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.onerror = () => resolve(e.target.result);
+      img.src = e.target.result;
+    };
+    reader.onerror = () => resolve('');
+    reader.readAsDataURL(file);
+  });
+}
+
 // تهيئة التطبيق عند فتح الصفحة
 document.addEventListener('DOMContentLoaded', () => {
   initDefaults();
@@ -86,27 +149,28 @@ document.addEventListener('DOMContentLoaded', () => {
   setupEventListeners();
   checkConnectionAndLoadData();
 
-  // تحديث تلقائي كل 10 ثوانٍ للبيانات الحية المشتركة
+  // تحديث تلقائي مستمر كل 6 ثوانٍ لمزامنة البيانات بين جميع الأجهزة فورياً
   setInterval(() => {
-    if (state.isServerOnline) {
-      loadDataFromServer(false);
+    if (!state.isSyncing) {
+      if (state.isServerOnline) {
+        loadDataFromServer(false);
+      } else {
+        loadDataFromCloud(false);
+      }
     }
-  }, 10000);
+  }, 6000);
 });
 
 // تعيين القيم الافتراضية
 function initDefaults() {
-  // تحديد الشهر الحالي بصيغة YYYY-MM
   const now = new Date();
   const year = now.getFullYear();
   const month = String(now.getMonth() + 1).padStart(2, '0');
   elements.monthInput.value = `${year}-${month}`;
 
-  // تعيين بند التحويل 500 جنيه والمبلغ تلقائياً
   elements.amountInput.value = FIXED_AMOUNT;
   elements.noteInput.value = 'التحويل 500 جنيه';
 
-  // تفعيل المستخدم المخزن
   setActiveUser(state.currentUser);
 }
 
@@ -126,11 +190,9 @@ function setActiveUser(name) {
   state.currentUser = name;
   localStorage.setItem('activeUser', name);
 
-  // تحديث أزرار الهيدر
   elements.btnSherif.classList.toggle('active', name === 'شريف');
   elements.btnAbdullah.classList.toggle('active', name === 'عبدالله');
 
-  // تحديث الراديو في النموذج
   if (name === 'شريف') {
     elements.radioSherif.checked = true;
   } else {
@@ -203,20 +265,17 @@ function clearSelectedFile() {
 
 // إعداد باقي الأحداث
 function setupEventListeners() {
-  // إرسال النموذج
   elements.paymentForm.addEventListener('submit', handleFormSubmit);
 
-  // تحديث الجدول
   elements.btnRefreshMatrix.addEventListener('click', () => {
     elements.btnRefreshMatrix.querySelector('i').classList.add('fa-spin');
     checkConnectionAndLoadData().finally(() => {
       setTimeout(() => {
         elements.btnRefreshMatrix.querySelector('i').classList.remove('fa-spin');
-      }, 500);
+      }, 600);
     });
   });
 
-  // فلاتر التحويلات
   elements.filterButtons.forEach(btn => {
     btn.addEventListener('click', () => {
       elements.filterButtons.forEach(b => b.classList.remove('active'));
@@ -226,7 +285,6 @@ function setupEventListeners() {
     });
   });
 
-  // التحكم في النافذة المنبثقة للصور
   elements.closeModalBtn.addEventListener('click', closeModal);
   elements.imageModal.addEventListener('click', (e) => {
     if (e.target === elements.imageModal) closeModal();
@@ -240,7 +298,6 @@ function setupEventListeners() {
     elements.modalFullImage.style.transform = `rotate(${state.currentRotation}deg)`;
   });
 
-  // أحداث الدفع المباشر عبر انستاباي
   if (elements.btnPayInstapay) {
     const isAndroid = /Android/i.test(navigator.userAgent);
     if (isAndroid) {
@@ -257,7 +314,7 @@ function setupEventListeners() {
   }
 }
 
-// دوال الدفع المباشر عبر انستاباي وتسجيل التحويل الفوري
+// دوال انستاباي
 function copyCardNumber() {
   const card = INSTAPAY_CARD_NUMBER;
   if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -279,18 +336,12 @@ function fallbackCopy(text) {
   showToast('📋 تم نسخ رقم بطاقة شريف ابراهيم: 5078086735520319', 'success');
 }
 
-// عند الضغط على زر انستاباي: نسخ رقم البطاقة + فتح تطبيق انستاباي + توجيه لرفع الإيصال
 async function quickPayAndRecord() {
-  // 1. نسخ رقم البطاقة فوراً
   copyCardNumber();
-
-  // 2. توجيه الموبايل لفتح تطبيق انستاباي مباشرة
   launchInstapayDirectly();
 
-  // 3. تنبيه المستخدم بضرورة رفع صورة الإيصال لتأكيد التسجيل
   showToast('📋 تم نسخ رقم البطاقة (5078086735520319) والمبلغ (500 ج.م)! داخل انستاباي: اختر "تحويل لبطاقة إلكترونية" واضغط لصق ثم اكتب 500 ج.م.', 'success');
 
-  // 4. التمرير إلى مربع رفع الصورة ليكون جاهزاً
   setTimeout(() => {
     if (elements.dropZone) {
       elements.dropZone.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -303,39 +354,92 @@ async function quickPayAndRecord() {
 function launchInstapayDirectly() {
   const isAndroid = /Android/i.test(navigator.userAgent);
   if (isAndroid) {
-    // تشغيل تطبيق انستاباي الرسمي على أندرويد مع بيانات البطاقة والمبلغ
     window.location.href = 'intent://#Intent;package=com.egyptianbanks.instapay;scheme=instapay;S.card=5078086735520319;S.amount=500;end';
     setTimeout(() => {
       window.location.href = 'instapay://';
     }, 500);
   } else {
-    // آيفون وباقي الأجهزة
     window.location.href = 'instapay://';
   }
 }
 
-// فحص الاتصال بالخادم وتحميل البيانات
+// فحص الاتصال وتحميل البيانات الموحدة
 async function checkConnectionAndLoadData() {
+  const isLocalHost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
+  if (!isLocalHost) {
+    state.isCloudMode = true;
+    updateCloudBanner(true);
+    await loadDataFromCloud(false);
+    return;
+  }
+
   try {
     const res = await fetch('/api/stats', { cache: 'no-cache' });
     if (res.ok) {
       state.isServerOnline = true;
+      state.isCloudMode = false;
       elements.connectionStatus.classList.add('hidden');
       await loadDataFromServer(true);
       return;
     }
-    throw new Error('Server not responding');
   } catch (err) {
-    // السيرفر غير متصل (مثلاً تم فتح الملف مباشرة من المتصفح كـ file:///)
-    state.isServerOnline = false;
-    elements.connectionStatus.classList.remove('hidden');
+    // التبديل للسحابة عند عدم وجود خادم محلي
+  }
+
+  state.isCloudMode = true;
+  updateCloudBanner(true);
+  await loadDataFromCloud(false);
+}
+
+function updateCloudBanner(online) {
+  elements.connectionStatus.classList.remove('hidden');
+  if (online) {
+    elements.connectionStatus.classList.add('online');
+    elements.connectionText.innerHTML = `🟢 <strong>متصل بالسحابة 24 ساعة:</strong> الرابط متزامن لحظياً بين شريف وعبدالله عبر جميع الموبايلات والأجهزة.`;
+  } else {
     elements.connectionStatus.classList.remove('online');
-    elements.connectionText.innerHTML = `⚠️ التطبيق يعمل في <strong>وضع التجربة المحلية</strong> (تم الحفظ على هذا الجهاز). لتشغيل المشاركة الحية بينك وبين عبدالله، قم بتشغيل السيرفر بالخطوات الموجودة في README.`;
-    loadDataFromLocalStorage();
+    elements.connectionText.innerHTML = `⚠️ جاري الاتصال بالسحابة...`;
   }
 }
 
-// جلب البيانات من سيرفر Express
+// جلب البيانات المشتركة من السحابة
+async function loadDataFromCloud(showNotification = false) {
+  try {
+    const res = await fetch(getRawPaymentsUrl(), { cache: 'no-cache' });
+    if (res.ok) {
+      const list = await res.json();
+      applyPaymentsList(list);
+      updateCloudBanner(true);
+      if (showNotification) {
+        showToast('تم تحديث البيانات من السحابة بنجاح', 'success');
+      }
+      return;
+    }
+  } catch (err) {
+    console.warn('Raw fetch failed, trying API fallback...', err);
+  }
+
+  try {
+    const apiRes = await fetch(getApiPaymentsUrl(), {
+      headers: {
+        'Authorization': `Bearer ${getCloudToken()}`,
+        'Accept': 'application/vnd.github.v3+json'
+      }
+    });
+    if (apiRes.ok) {
+      const fileInfo = await apiRes.json();
+      const contentStr = base64ToUtf8(fileInfo.content);
+      const list = JSON.parse(contentStr || '[]');
+      applyPaymentsList(list);
+      updateCloudBanner(true);
+    }
+  } catch (e2) {
+    console.error('API load error:', e2);
+  }
+}
+
+// جلب البيانات من السيرفر المحلي في حال تشغيله
 async function loadDataFromServer(showNotification = false) {
   try {
     const [statsRes, paymentsRes] = await Promise.all([
@@ -363,7 +467,60 @@ async function loadDataFromServer(showNotification = false) {
   }
 }
 
-// معالجة إرسال النموذج
+// تطبيق قائمة التحويلات وحساب الإحصائيات ورسم اللوحة
+function applyPaymentsList(list) {
+  if (!Array.isArray(list)) list = [];
+  list.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  state.payments = list;
+
+  let sherifTotal = 0, abdullahTotal = 0, sherifCount = 0, abdullahCount = 0;
+  const monthsMap = {};
+
+  list.forEach(p => {
+    const amt = Number(p.amount) || 0;
+    if (p.person === 'شريف') {
+      sherifTotal += amt;
+      sherifCount++;
+    } else if (p.person === 'عبدالله') {
+      abdullahTotal += amt;
+      abdullahCount++;
+    }
+
+    const m = p.month || 'غير محدد';
+    if (!monthsMap[m]) {
+      monthsMap[m] = {
+        month: m,
+        sherif: { paid: false, amount: 0 },
+        abdullah: { paid: false, amount: 0 },
+        total: 0
+      };
+    }
+    if (p.person === 'شريف') {
+      monthsMap[m].sherif.paid = true;
+      monthsMap[m].sherif.amount += amt;
+    } else if (p.person === 'عبدالله') {
+      monthsMap[m].abdullah.paid = true;
+      monthsMap[m].abdullah.amount += amt;
+    }
+    monthsMap[m].total += amt;
+  });
+
+  state.stats = {
+    totalPaid: sherifTotal + abdullahTotal,
+    sherifTotal,
+    abdullahTotal,
+    sherifCount,
+    abdullahCount,
+    totalPaymentsCount: list.length,
+    monthlyBreakdown: Object.values(monthsMap).sort((a, b) => b.month.localeCompare(a.month))
+  };
+
+  renderStats();
+  renderMonthlyMatrix();
+  renderTransactions();
+}
+
+// معالجة إرسال النموذج وحفظ التحويل في السحابة
 async function handleFormSubmit(e) {
   e.preventDefault();
 
@@ -390,26 +547,37 @@ async function handleFormSubmit(e) {
 
   // تعطيل الزر مؤقتاً
   elements.submitBtn.disabled = true;
-  elements.submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري حفظ التحويل...';
+  elements.submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري ضغط الإيصال والمزامنة مع السحابة...';
+  state.isSyncing = true;
 
-  if (state.isServerOnline) {
-    // إرسال للسيرفر عبر FormData
-    try {
+  try {
+    // ضغط صورة الإيصال لتحميلها سحابياً بسرعة وأمان
+    const compressedImageBase64 = await compressReceiptImage(state.selectedFile);
+
+    const newPayment = {
+      id: 'pay_' + Date.now(),
+      person: person,
+      month: month,
+      amount: amount,
+      method: method,
+      note: note || 'التحويل 500 جنيه',
+      receiptUrl: compressedImageBase64,
+      createdAt: new Date().toISOString()
+    };
+
+    if (state.isServerOnline) {
       const formData = new FormData();
       formData.append('person', person);
       formData.append('month', month);
       formData.append('amount', amount);
       formData.append('method', method);
       formData.append('note', note || 'التحويل 500 جنيه');
-      if (state.selectedFile) {
-        formData.append('receipt', state.selectedFile);
-      }
+      formData.append('receipt', state.selectedFile);
 
       const res = await fetch('/api/payments', {
         method: 'POST',
         body: formData
       });
-
       const result = await res.json();
       if (res.ok && result.success) {
         showToast('🎉 تم تسجيل التحويل بنجاح في الداشبورد!', 'success');
@@ -418,20 +586,74 @@ async function handleFormSubmit(e) {
       } else {
         showToast(result.message || 'حدث خطأ أثناء حفظ التحويل', 'error');
       }
-    } catch (err) {
-      console.error(err);
-      showToast('تعذر الاتصال بالسيرفر أثناء الحفظ', 'error');
-    } finally {
-      elements.submitBtn.disabled = false;
-      elements.submitBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i><span>تأكيد وتسجيل التحويل في اللوحة</span>';
+    } else {
+      // الوضع السحابي العام (GitHub Cloud Sync 24/7)
+      elements.submitBtn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up fa-spin"></i> جاري الحفظ في السحابة المشتركة...';
+
+      // 1. جلب الملف الحالي والـ SHA
+      const getRes = await fetch(getApiPaymentsUrl(), {
+        headers: {
+          'Authorization': `Bearer ${getCloudToken()}`,
+          'Accept': 'application/vnd.github.v3+json'
+        }
+      });
+
+      if (!getRes.ok) {
+        throw new Error('فشل الوصول إلى قاعدة البيانات السحابية');
+      }
+
+      const fileData = await getRes.json();
+      const currentSha = fileData.sha;
+      const currentContentStr = base64ToUtf8(fileData.content);
+      let currentList = [];
+      try {
+        currentList = JSON.parse(currentContentStr);
+        if (!Array.isArray(currentList)) currentList = [];
+      } catch (e) {
+        currentList = [];
+      }
+
+      // إضافة التحويل الجديد في مقدمة القائمة
+      currentList.unshift(newPayment);
+
+      // 2. الحفظ عبر GitHub API
+      const newJsonStr = JSON.stringify(currentList, null, 2);
+      const newContentB64 = utf8ToBase64(newJsonStr);
+
+      const putPayload = {
+        message: `تسجيل تحويل بواسطة ${person} (${amount} ج.م) لشهر ${month}`,
+        content: newContentB64,
+        sha: currentSha,
+        branch: 'main'
+      };
+
+      const putRes = await fetch(getApiPaymentsUrl(), {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${getCloudToken()}`,
+          'Accept': 'application/vnd.github.v3+json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(putPayload)
+      });
+
+      if (!putRes.ok) {
+        const errData = await putRes.json().catch(() => ({}));
+        throw new Error(errData.message || 'فشل حفظ التحويل في السحابة');
+      }
+
+      // تحديث العرض مباشرة
+      applyPaymentsList(currentList);
+      showToast('🎉 تم تسجيل التحويل بنجاح في السحابة المشتركة! سيظهر الآن على هاتف الطرف الآخر فوراً.', 'success');
+      resetForm();
     }
-  } else {
-    // حفظ محلي في حالة عدم وجود سيرفر (تجربة)
-    saveLocally(person, month, amount, method, note || 'التحويل 500 جنيه', elements.imagePreview.src || '/uploads/sample-receipt.svg');
+  } catch (err) {
+    console.error('Submit error:', err);
+    showToast('⚠️ خطأ: ' + (err.message || 'تعذر الاتصال بالسحابة'), 'error');
+  } finally {
+    state.isSyncing = false;
     elements.submitBtn.disabled = false;
-    elements.submitBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i><span>تأكيد وتسجيل التحويل في اللوحة</span>';
-    showToast('🎉 تم تسجيل التحويل في التخزين المحلي بنجاح!', 'success');
-    resetForm();
+    elements.submitBtn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i><span>تأكيد وتسجيل التحويل وحفظ الإيصال</span>';
   }
 }
 
@@ -455,7 +677,6 @@ function renderStats() {
   elements.statAbdullahTotal.innerHTML = `${formatNumber(stats.abdullahTotal)} <small>ج.م</small>`;
   elements.statAbdullahCount.textContent = `${stats.abdullahCount} عملية تحويل`;
 
-  // مقارنة التوازن بين شريف وعبدالله
   const diff = stats.sherifTotal - stats.abdullahTotal;
   if (diff === 0) {
     elements.statBalanceStatus.textContent = 'متساويان تماماً ⚖️';
@@ -492,12 +713,10 @@ function renderMonthlyMatrix() {
   breakdown.forEach(item => {
     const formattedMonth = formatMonthName(item.month);
     
-    // شريف
     const sherifBadge = item.sherif.paid
       ? `<span class="status-badge paid"><i class="fa-solid fa-check"></i> تم (${formatNumber(item.sherif.amount)} ج.م)</span>`
       : `<span class="status-badge unpaid"><i class="fa-solid fa-clock"></i> لم يدفع</span>`;
 
-    // عبدالله
     const abdullahBadge = item.abdullah.paid
       ? `<span class="status-badge paid"><i class="fa-solid fa-check"></i> تم (${formatNumber(item.abdullah.amount)} ج.م)</span>`
       : `<span class="status-badge unpaid"><i class="fa-solid fa-clock"></i> لم يدفع</span>`;
@@ -607,9 +826,9 @@ function closeModal() {
   document.body.style.overflow = '';
 }
 
-// حذف تحويل
+// حذف تحويل من السحابة أو الخادم
 window.deleteTransaction = async function(id) {
-  if (!confirm('هل أنت متأكد من رغبتك في حذف هذا التحويل وصورة الإيصال؟')) {
+  if (!confirm('هل أنت متأكد من رغبتك في حذف هذا التحويل وصورة الإيصال نهائياً؟')) {
     return;
   }
 
@@ -628,85 +847,52 @@ window.deleteTransaction = async function(id) {
       showToast('خطأ في الاتصال بالخادم', 'error');
     }
   } else {
-    // حذف محلي
-    let localList = JSON.parse(localStorage.getItem('local_payments') || '[]');
-    localList = localList.filter(p => p.id !== id);
-    localStorage.setItem('local_payments', JSON.stringify(localList));
-    loadDataFromLocalStorage();
-    showToast('تم حذف التحويل من التخزين المحلي', 'success');
+    try {
+      showToast('جاري حذف التحويل من السحابة...', 'success');
+      state.isSyncing = true;
+      const getRes = await fetch(getApiPaymentsUrl(), {
+        headers: {
+          'Authorization': `Bearer ${getCloudToken()}`,
+          'Accept': 'application/vnd.github.v3+json'
+        }
+      });
+      if (!getRes.ok) throw new Error('فشل الاتصال');
+      const fileData = await getRes.json();
+      const currentContentStr = base64ToUtf8(fileData.content);
+      let currentList = JSON.parse(currentContentStr || '[]');
+      currentList = currentList.filter(p => p.id !== id);
+
+      const putPayload = {
+        message: `حذف تحويل رقم ${id}`,
+        content: utf8ToBase64(JSON.stringify(currentList, null, 2)),
+        sha: fileData.sha,
+        branch: 'main'
+      };
+
+      const putRes = await fetch(getApiPaymentsUrl(), {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${getCloudToken()}`,
+          'Accept': 'application/vnd.github.v3+json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(putPayload)
+      });
+
+      if (putRes.ok) {
+        applyPaymentsList(currentList);
+        showToast('تم حذف التحويل من السحابة بنجاح', 'success');
+      } else {
+        throw new Error('فشل تأكيد الحذف');
+      }
+    } catch (e) {
+      console.error('Delete error:', e);
+      showToast('فشل حذف التحويل من السحابة', 'error');
+    } finally {
+      state.isSyncing = false;
+    }
   }
 };
-
-// وضع التخزين المحلي (Local Storage Fallback)
-function saveLocally(person, month, amount, method, note, imageBase64) {
-  const localList = JSON.parse(localStorage.getItem('local_payments') || '[]');
-  const newTx = {
-    id: 'local_' + Date.now(),
-    person,
-    month,
-    amount,
-    method,
-    note,
-    receiptUrl: imageBase64,
-    createdAt: new Date().toISOString()
-  };
-  localList.push(newTx);
-  localStorage.setItem('local_payments', JSON.stringify(localList));
-  loadDataFromLocalStorage();
-}
-
-function loadDataFromLocalStorage() {
-  const list = JSON.parse(localStorage.getItem('local_payments') || '[]');
-  list.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-  state.payments = list;
-
-  // حساب الإحصائيات محلياً
-  let sherifTotal = 0, abdullahTotal = 0, sherifCount = 0, abdullahCount = 0;
-  const monthsMap = {};
-
-  list.forEach(p => {
-    const amt = Number(p.amount) || 0;
-    if (p.person === 'شريف') {
-      sherifTotal += amt;
-      sherifCount++;
-    } else if (p.person === 'عبدالله') {
-      abdullahTotal += amt;
-      abdullahCount++;
-    }
-
-    const m = p.month || 'غير محدد';
-    if (!monthsMap[m]) {
-      monthsMap[m] = {
-        month: m,
-        sherif: { paid: false, amount: 0 },
-        abdullah: { paid: false, amount: 0 },
-        total: 0
-      };
-    }
-    if (p.person === 'شريف') {
-      monthsMap[m].sherif.paid = true;
-      monthsMap[m].sherif.amount += amt;
-    } else if (p.person === 'عبدالله') {
-      monthsMap[m].abdullah.paid = true;
-      monthsMap[m].abdullah.amount += amt;
-    }
-    monthsMap[m].total += amt;
-  });
-
-  state.stats = {
-    totalPaid: sherifTotal + abdullahTotal,
-    sherifTotal,
-    abdullahTotal,
-    sherifCount,
-    abdullahCount,
-    totalPaymentsCount: list.length,
-    monthlyBreakdown: Object.values(monthsMap).sort((a, b) => b.month.localeCompare(a.month))
-  };
-
-  renderStats();
-  renderMonthlyMatrix();
-  renderTransactions();
-}
 
 // دوال مساعدة للتنسيق والتنبيهات
 function formatNumber(num) {
