@@ -244,7 +244,7 @@ function setupEventListeners() {
   if (elements.btnPayInstapay) {
     const isAndroid = /Android/i.test(navigator.userAgent);
     if (isAndroid) {
-      elements.btnPayInstapay.href = 'intent://#Intent;package=com.emeint.android.mysrv;scheme=instapay;end';
+      elements.btnPayInstapay.href = 'intent://#Intent;package=com.egyptianbanks.instapay;scheme=instapay;S.card=5078086735520319;S.amount=500;end';
     } else {
       elements.btnPayInstapay.href = 'instapay://';
     }
@@ -288,7 +288,7 @@ async function quickPayAndRecord() {
   launchInstapayDirectly();
 
   // 3. تنبيه المستخدم بضرورة رفع صورة الإيصال لتأكيد التسجيل
-  showToast('📲 تم نسخ رقم البطاقة وتوجيهك لإنستاباي! بعد إتمام التحويل، يرجى رفع صورة الإيصال بالأسفل لتأكيد التسجيل.', 'success');
+  showToast('📋 تم نسخ رقم البطاقة (5078086735520319) والمبلغ (500 ج.م)! داخل انستاباي: اختر "تحويل لبطاقة إلكترونية" واضغط لصق ثم اكتب 500 ج.م.', 'success');
 
   // 4. التمرير إلى مربع رفع الصورة ليكون جاهزاً
   setTimeout(() => {
@@ -303,11 +303,11 @@ async function quickPayAndRecord() {
 function launchInstapayDirectly() {
   const isAndroid = /Android/i.test(navigator.userAgent);
   if (isAndroid) {
-    // تشغيل تطبيق انستاباي المباشر على أندرويد
-    window.location.href = 'intent://#Intent;package=com.emeint.android.mysrv;scheme=instapay;end';
+    // تشغيل تطبيق انستاباي الرسمي على أندرويد مع بيانات البطاقة والمبلغ
+    window.location.href = 'intent://#Intent;package=com.egyptianbanks.instapay;scheme=instapay;S.card=5078086735520319;S.amount=500;end';
     setTimeout(() => {
       window.location.href = 'instapay://';
-    }, 400);
+    }, 500);
   } else {
     // آيفون وباقي الأجهزة
     window.location.href = 'instapay://';
