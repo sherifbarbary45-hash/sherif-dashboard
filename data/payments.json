@@ -1,12 +1,1 @@
-[
-  {
-    "id": "pay_test_live",
-    "person": "شريف",
-    "month": "2026-10",
-    "amount": 500,
-    "method": "انستاباي",
-    "note": "تحويل اختباري متزامن",
-    "receiptUrl": "",
-    "createdAt": "2026-10-30T17:50:00Z"
-  }
-]
+[]
